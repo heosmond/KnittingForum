@@ -1,21 +1,44 @@
 using System.Diagnostics;
 using KnittingForum.Models;
 using Microsoft.AspNetCore.Mvc;
+using KnittingForum.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace KnittingForum.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly KnittingForumContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(KnittingForumContext context)
         {
-            _logger = logger;
+            _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            // get a list of all discussions, including the comments associated with each
+            var discussions = await _context.Discussion
+                .Include(d => d.Comments)
+                .ToListAsync();
+
+            // pass photos object into View
+            return View(discussions);
+        }
+
+        // pass in key, get discussion from that
+        public async Task<IActionResult> GetDiscussion(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var discussion = await _context.Discussion
+                .Include(d => d.Comments)
+                .FirstOrDefaultAsync(d => d.DiscussionId == id);
+
+            return View(discussion);
         }
 
         public IActionResult Privacy()

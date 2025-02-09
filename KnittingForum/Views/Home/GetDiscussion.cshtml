@@ -1,0 +1,50 @@
+﻿@using Microsoft.EntityFrameworkCore.Infrastructure
+@using Microsoft.EntityFrameworkCore.Metadata.Internal
+@model KnittingForum.Models.Discussion
+
+@{
+	ViewData["Title"] = "Discussion";
+	string imageUrl = Url.Content("/images/" + Model.ImageFilename);
+}
+
+<div class="container">
+	<div class="col-md-6 mx-auto">
+		<h2>@Html.DisplayFor(model => model.Title)</h2>
+		<p>@Html.DisplayFor(model => model.CreateDate)</p>
+	</div>
+	@if (!string.IsNullOrEmpty(Model.ImageFilename))
+	{
+		<div class="col-md-6 mx-auto">
+			<img src="@imageUrl" class="img-fluid" alt="@Model.Title" />
+		</div>
+	}
+	
+	<div class="col-md-6 mx-auto mt-5 discussion-item">
+		<h3 class="pt-4 ps-4">Discussion</h3>
+		<p class="px-5 pb-4 pt-2">@Model.Content</p>
+	</div>
+
+	<div class="col-md-6 mx-auto discussion-item">
+		<div class="p-3 mx-auto comment-container">
+			<div class="mb-4">
+				<h3>Comments</h3>
+				<a asp-controller="Comments" asp-action="Create" asp-route-id="@Model.DiscussionId" class="btn btn-secondary">Add a comment</a>
+			</div>
+
+			<div>
+				@if (Model.Comments != null)
+				{
+					foreach (var comment in Model.Comments)
+					{
+						<p class="comment p-2">@comment.Content</p>
+					}
+				}
+				else
+				{
+					<p>No comments.</p>
+				}
+			</div>
+		</div>
+	</div>
+</div>
+

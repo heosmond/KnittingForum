@@ -1,4 +1,9 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using KnittingForum.Data;
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<KnittingForumContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("KnittingForumContext") ?? throw new InvalidOperationException("Connection string 'KnittingForumContext' not found.")));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

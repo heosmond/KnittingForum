@@ -1,8 +1,34 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@using Microsoft.IdentityModel.Tokens
+@model List<KnittingForum.Models.Discussion>
+
+@{
+	ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+
+<div class="container col-md-8 mx-auto">
+	<h1 class="fw-bold">Discussion Forums</h1>
+	<a asp-area="" asp-controller="Discussions" asp-action="Create" class="btn btn-primary">Create discussion</a>
+	@foreach (var item in Model)
+	{
+		<div class="mb-2">
+			<div class="container discussion-item p-3 mt-3">
+				<div class="row row-cols-2">
+					<div class="col-7 ">
+						<a href="@Url.Action("GetDiscussion", "Home", new { id = item.DiscussionId })">
+							<h4>@item.Title</h4>
+						</a>
+						<p>@item.CreateDate</p>
+						<p>Comments: <b>@(item.Comments?.Count ?? 0)</b></p>
+					</div>
+					<div class="col-3 offset-md-2">
+						@if (!item.ImageFilename.IsNullOrEmpty())
+						{
+							<img src="@Url.Content("/images/" + item.ImageFilename)" class="img-fluid img-thumbnail" alt="@item.Title"/>
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+	}
 </div>
