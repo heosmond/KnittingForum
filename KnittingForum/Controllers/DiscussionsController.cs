@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using KnittingForum.Data;
 using KnittingForum.Models;
+using Microsoft.IdentityModel.Tokens;
 
 namespace KnittingForum.Controllers
 {
@@ -57,7 +58,11 @@ namespace KnittingForum.Controllers
         public async Task<IActionResult> Create([Bind("DiscussionId,Title,Content,ImageFile,CreateDate")] Discussion discussion)
         {
             // rename the uploaded file to a guid (unique filename). Set before photo saved in database.
-            discussion.ImageFilename = Guid.NewGuid() + Path.GetExtension(discussion.ImageFile?.FileName);
+            if (!discussion.ImageFilename.IsNullOrEmpty())
+            {
+                discussion.ImageFilename = Guid.NewGuid() + Path.GetExtension(discussion.ImageFile?.FileName);
+
+            }
 
             if (ModelState.IsValid)
             {
