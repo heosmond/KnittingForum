@@ -9,6 +9,7 @@ using KnittingForum.Data;
 using KnittingForum.Models;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace KnittingForum.Controllers
 {
@@ -16,16 +17,23 @@ namespace KnittingForum.Controllers
     public class DiscussionsController : Controller
     {
         private readonly KnittingForumContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public DiscussionsController(KnittingForumContext context)
+        public DiscussionsController(KnittingForumContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Discussions
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Discussion.ToListAsync());
+            // only get photos from the logged-in user
+            var discussions = await _context.Discussion
+                .Where(d => d.ApplicationUserId == _userManager.GetUserId(User))
+                .ToListAsync();
+
+            return View(discussions);
         }
 
         // GET: Discussions/Details/5
@@ -38,6 +46,7 @@ namespace KnittingForum.Controllers
 
             var discussion = await _context.Discussion
                 .FirstOrDefaultAsync(m => m.DiscussionId == id);
+
             if (discussion == null)
             {
                 return NotFound();
@@ -65,6 +74,9 @@ namespace KnittingForum.Controllers
                 discussion.ImageFilename = Guid.NewGuid() + Path.GetExtension(discussion.ImageFile?.FileName);
 
             }
+
+            // set the user id to the logged-in user
+            discussion.ApplicationUserId = _userManager.GetUserId(User);
 
             if (ModelState.IsValid)
             {
@@ -94,7 +106,12 @@ namespace KnittingForum.Controllers
                 return NotFound();
             }
 
-            var discussion = await _context.Discussion.FindAsync(id);
+            // only serve edit page for discussion that belong to the user
+            var discussion = await _context.Discussion
+                .Where(d => d.ApplicationUserId == _userManager.GetUserId(User))
+                .Include("Comments")
+                .FirstOrDefaultAsync(m => m.DiscussionId == id);
+
             if (discussion == null)
             {
                 return NotFound();
@@ -146,8 +163,12 @@ namespace KnittingForum.Controllers
                 return NotFound();
             }
 
+            // only serve delete page for discussion that belong to the user
             var discussion = await _context.Discussion
+                .Where(m => m.ApplicationUserId == _userManager.GetUserId(User))
                 .FirstOrDefaultAsync(m => m.DiscussionId == id);
+
+
             if (discussion == null)
             {
                 return NotFound();

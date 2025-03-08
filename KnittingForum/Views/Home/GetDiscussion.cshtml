@@ -5,11 +5,21 @@
 @{
 	ViewData["Title"] = "Discussion";
 	string imageUrl = Url.Content("/images/" + Model.ImageFilename);
+	string profileImageUrl = Url.Content("/profile_img/" + Model.ApplicationUser.ImageFilename);
 }
 
 <div class="container">
 	<div class="col-md-6 mx-auto">
 		<h2>@Html.DisplayFor(model => model.Title)</h2>
+		<div class="d-flex flex-row ">
+			@if (!string.IsNullOrEmpty(Model.ApplicationUser.ImageFilename))
+			{
+				<img src="@profileImageUrl" class="rounded-circle w-25" alt="profile image" />
+			}
+			<a href="@Url.Action("Profile", "Home", new { id = Model.ApplicationUserId })">
+				<p>@Model.ApplicationUser.Name</p>
+			</a>
+		</div>
 		<p>@Html.DisplayFor(model => model.CreateDate)</p>
 	</div>
 	@if (!string.IsNullOrEmpty(Model.ImageFilename))
@@ -36,6 +46,15 @@
 				{
 					foreach (var comment in Model.Comments)
 					{
+						@if (!string.IsNullOrEmpty(comment.ApplicationUser.ImageFilename))
+						{
+							<div class="col-md-6 mx-auto">
+								<img src="@profileImageUrl" class="img-fluid" alt="profile image" />
+							</div>
+						}
+						<a href="@Url.Action("Profile", "Home", new { id = comment.ApplicationUserId })">
+							<p>@comment.ApplicationUser.Name</p>
+						</a>
 						<p class="comment p-2">@comment.Content</p>
 					}
 				}

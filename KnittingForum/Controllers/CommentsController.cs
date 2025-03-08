@@ -9,16 +9,21 @@ using KnittingForum.Data;
 using KnittingForum.Models;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Azure;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace KnittingForum.Controllers
 {
+    [Authorize]
     public class CommentsController : Controller
     {
         private readonly KnittingForumContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public CommentsController(KnittingForumContext context)
+        public CommentsController(KnittingForumContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // Deleted the following:
@@ -58,6 +63,7 @@ namespace KnittingForum.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("CommentId,Content,CreateDate,DiscussionId")] Comment comment)
         {
+            comment.ApplicationUserId = _userManager.GetUserId(User);
 
             if (ModelState.IsValid)
             {

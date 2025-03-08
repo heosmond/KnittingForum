@@ -1,0 +1,28 @@
+﻿@model ProfileViewModel
+
+@{
+	ViewData["Title"] = "Profile";
+}
+
+<div class="container">
+	<div class="profile-detail">
+		<h2>@Model.User.Name</h2>
+		@if (!string.IsNullOrEmpty(Model.User.ImageFilename))
+		{
+			<img src="@Url.Content("/profile_img/" + Model.User.ImageFilename)" class="rounded-circle w-25" alt="profile image" />
+		}
+		<p>@Model.User.Location</p>
+		<p>@Model.User.Bio</p>
+	</div>
+	<div>
+		@foreach (var item in Model.Discussions)
+		{
+			<div class="p-4">
+				<a href="@Url.Action("GetDiscussion", "Home", new { id = item.DiscussionId })">
+					<h4>@item.Title</h4>
+				</a>
+				<p>@item.CreateDate</p>
+			</div>
+		}
+	</div>
+</div>
