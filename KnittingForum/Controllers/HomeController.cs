@@ -3,9 +3,11 @@ using KnittingForum.Models;
 using Microsoft.AspNetCore.Mvc;
 using KnittingForum.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace KnittingForum.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly KnittingForumContext _context;

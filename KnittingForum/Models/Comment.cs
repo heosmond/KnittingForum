@@ -1,4 +1,6 @@
-﻿namespace KnittingForum.Models
+﻿using KnittingForum.Data;
+
+namespace KnittingForum.Models
 {
     public class Comment
     {
@@ -9,7 +11,15 @@
         // foreign key
         public int DiscussionId { get; set; }
 
+        // Foreign key (AspNetUsers table)
+        public string ApplicationUserId { get; set; } = string.Empty;
+
+        // Navigation property
+        public ApplicationUser? ApplicationUser { get; set; }
+
         // navigation
         public Discussion? Discussion { get; set; }
+
+
     }
 }

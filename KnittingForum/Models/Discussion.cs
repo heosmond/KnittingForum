@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using KnittingForum.Data;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KnittingForum.Models
@@ -16,6 +17,12 @@ namespace KnittingForum.Models
         [NotMapped]
         [Display(Name = "Image")]
         public IFormFile? ImageFile { get; set; }
+
+        // Foreign key (AspNetUsers table)
+        public string ApplicationUserId { get; set; } = string.Empty;
+
+        // Navigation property
+        public ApplicationUser? ApplicationUser { get; set; }
 
         // Navigation property
         public List<Comment>? Comments { get; set; }

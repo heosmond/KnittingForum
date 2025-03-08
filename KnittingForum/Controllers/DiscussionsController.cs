@@ -8,9 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using KnittingForum.Data;
 using KnittingForum.Models;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authorization;
 
 namespace KnittingForum.Controllers
 {
+    [Authorize]
     public class DiscussionsController : Controller
     {
         private readonly KnittingForumContext _context;
