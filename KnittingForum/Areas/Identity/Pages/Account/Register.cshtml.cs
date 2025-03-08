@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
+using KnittingForum.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -23,17 +24,17 @@ namespace KnittingForum.Areas.Identity.Pages.Account
 {
     public class RegisterModel : PageModel
     {
-        private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly IUserStore<IdentityUser> _userStore;
-        private readonly IUserEmailStore<IdentityUser> _emailStore;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IUserStore<ApplicationUser> _userStore;
+        private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
 
         public RegisterModel(
-            UserManager<IdentityUser> userManager,
-            IUserStore<IdentityUser> userStore,
-            SignInManager<IdentityUser> signInManager,
+            UserManager<ApplicationUser> userManager,
+            IUserStore<ApplicationUser> userStore,
+            SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender)
         {
@@ -70,6 +71,25 @@ namespace KnittingForum.Areas.Identity.Pages.Account
         /// </summary>
         public class InputModel
         {
+            //
+            // BEGIN: ApplicationUser custom fields
+            //
+
+            [Required]
+            public string Name { get; set; }
+
+            [Display(Name = "Short Bio")]
+            public string Bio { get; set; }
+
+            public string Location { get; set; }
+
+            [Display(Name = "Profile Picture")]
+            public IFormFile ImageFile { get; set; }
+
+            //
+            // END: ApplicationUser custom fields
+            //
+
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
@@ -114,6 +134,34 @@ namespace KnittingForum.Areas.Identity.Pages.Account
             {
                 var user = CreateUser();
 
+                //
+                // BEGIN: ApplicationUser custom fields
+                //
+                user.Name = Input.Name;
+                user.Bio = Input.Bio;
+                user.Location = Input.Location;
+
+                // Save the uploaded file after the photo is saved in the database.
+                if (Input.ImageFile != null)
+                {
+                    string fileName = Guid.NewGuid() + Path.GetExtension(Input.ImageFile?.FileName);
+
+                    // part 1: save the file
+                    string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "profile_img", fileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await Input.ImageFile.CopyToAsync(fileStream);
+                    }
+
+                    // part 2: update record with filename
+                    user.ImageFilename = fileName;
+                }
+
+                //
+                // END: ApplicationUser custom fields
+                //
+
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
                 var result = await _userManager.CreateAsync(user, Input.Password);
@@ -154,11 +202,11 @@ namespace KnittingForum.Areas.Identity.Pages.Account
             return Page();
         }
 
-        private IdentityUser CreateUser()
+        private ApplicationUser CreateUser()
         {
             try
             {
-                return Activator.CreateInstance<IdentityUser>();
+                return Activator.CreateInstance<ApplicationUser>();
             }
             catch
             {
@@ -168,13 +216,13 @@ namespace KnittingForum.Areas.Identity.Pages.Account
             }
         }
 
-        private IUserEmailStore<IdentityUser> GetEmailStore()
+        private IUserEmailStore<ApplicationUser> GetEmailStore()
         {
             if (!_userManager.SupportsUserEmail)
             {
                 throw new NotSupportedException("The default UI requires a user store with email support.");
             }
-            return (IUserEmailStore<IdentityUser>)_userStore;
+            return (IUserEmailStore<ApplicationUser>)_userStore;
         }
     }
 }

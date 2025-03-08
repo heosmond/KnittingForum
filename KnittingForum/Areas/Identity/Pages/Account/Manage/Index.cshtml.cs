@@ -6,6 +6,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using KnittingForum.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -14,12 +15,12 @@ namespace KnittingForum.Areas.Identity.Pages.Account.Manage
 {
     public class IndexModel : PageModel
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
         public IndexModel(
-            UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager)
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -51,6 +52,27 @@ namespace KnittingForum.Areas.Identity.Pages.Account.Manage
         /// </summary>
         public class InputModel
         {
+            //
+            // BEGIN: ApplicationUser custom fields
+            //
+
+            [Required]
+            public string Name { get; set; }
+
+            public string Location { get; set; }
+
+            [Display(Name = "About me")]
+            public string Bio { get; set; }
+
+            public string ImageFilename { get; set; }
+
+            [Display(Name = "Profile Picture")]
+            public IFormFile ImageFile { get; set; }
+
+            //
+            // END: ApplicationUser custom fields
+            //
+
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
@@ -60,7 +82,7 @@ namespace KnittingForum.Areas.Identity.Pages.Account.Manage
             public string PhoneNumber { get; set; }
         }
 
-        private async Task LoadAsync(IdentityUser user)
+        private async Task LoadAsync(ApplicationUser user)
         {
             var userName = await _userManager.GetUserNameAsync(user);
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
@@ -69,6 +91,18 @@ namespace KnittingForum.Areas.Identity.Pages.Account.Manage
 
             Input = new InputModel
             {
+                //
+                // BEGIN: ApplicationUser custom fields
+                //
+
+                Name = user.Name,
+                Location = user.Location,
+                Bio = user.Bio,
+                ImageFilename = user.ImageFilename,
+
+                //
+                // END: ApplicationUser custom fields
+                //
                 PhoneNumber = phoneNumber
             };
         }
@@ -99,6 +133,7 @@ namespace KnittingForum.Areas.Identity.Pages.Account.Manage
                 return Page();
             }
 
+
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
             if (Input.PhoneNumber != phoneNumber)
             {
@@ -109,6 +144,49 @@ namespace KnittingForum.Areas.Identity.Pages.Account.Manage
                     return RedirectToPage();
                 }
             }
+
+            //
+            // BEGIN: ApplicationUser custom fields
+            //
+
+            if (Input.Name != user.Name)
+            {
+                user.Name = Input.Name;
+            }
+
+            if (Input.Bio != user.Bio)
+            {
+                user.Bio = Input.Bio;
+            }
+
+            if (Input.Location != user.Location)
+            {
+                user.Location = Input.Location;
+            }
+
+            // Save the uploaded file after the photo is saved in the database.
+            if (Input.ImageFile != null)
+            {
+                string fileName = Guid.NewGuid() + Path.GetExtension(Input.ImageFile?.FileName);
+
+                // part 1: save the file
+                string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "profile_img", fileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await Input.ImageFile.CopyToAsync(fileStream);
+                }
+
+                // part 2: update record with filename
+                user.ImageFilename = fileName;
+            }
+
+            await _userManager.UpdateAsync(user);
+
+            //
+            // END: ApplicationUser custom fields
+            //
+
 
             await _signInManager.RefreshSignInAsync(user);
             StatusMessage = "Your profile has been updated";
